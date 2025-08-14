@@ -10,9 +10,14 @@ const uploadMedia = async (req, res, next) => {
       return res.status(400).json({ error: 'Title, type, and media file are required' });
     }
 
+    const fs = require('fs');
+    const path = require('path');
+
     // In a real application, you would upload the file to a cloud storage
-    // and get a URL. For now, we'll use a placeholder.
-    const fileUrl = `uploads/${file.originalname}`;
+    // and get a URL. For now, we'll save it locally.
+    const fileUrl = `uploads/${Date.now()}-${file.originalname}`;
+    const filePath = path.join(__dirname, '..', '..', fileUrl);
+    fs.writeFileSync(filePath, file.buffer);
 
     const mediaAsset = await MediaAsset.create({
       title,
@@ -29,15 +34,16 @@ const uploadMedia = async (req, res, next) => {
   }
 };
 
+const { generateSecureStreamURL } = require('../services/streaming.service');
+
 const getStreamingUrl = async (req, res, next) => {
   try {
-    // This is a placeholder. In a real application, you would generate a
-    // signed URL with a short expiry time.
     const mediaAsset = await MediaAsset.findByPk(req.params.id);
     if (!mediaAsset) {
       return res.status(404).json({ error: 'Media not found' });
     }
-    res.status(200).json({ url: mediaAsset.file_url });
+    const secureUrl = generateSecureStreamURL(mediaAsset.id);
+    res.status(200).json(secureUrl);
   } catch (error) {
     next(error);
   }

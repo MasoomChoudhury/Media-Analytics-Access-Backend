@@ -50,8 +50,13 @@ const testApi = async () => {
     });
     console.log('Streaming URL:', streamUrlResponse.data);
 
-    // 5. Log View
-    console.log('\n5. Logging a view...');
+    // Verify the streaming URL
+    console.log('\n4a. Verifying streaming URL...');
+    const streamResponse = await axios.get(streamUrlResponse.data.url, { responseType: 'stream' });
+    console.log('Stream verification successful. Status:', streamResponse.status);
+
+    // 5. Log View (This is now handled by the streaming endpoint, but we can test the direct endpoint too)
+    console.log('\n5. Logging a view directly...');
     const logViewResponse = await axios.post(
       `${API_URL}/analytics/media/${mediaId}/view`,
       {},

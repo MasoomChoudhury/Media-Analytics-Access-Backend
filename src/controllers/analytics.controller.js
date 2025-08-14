@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { getCachedAnalytics, invalidateAnalyticsCache } = require('../services/analytics.service');
 const MediaViewLog = require('../models/MediaViewLog');
 const MediaAsset = require('../models/MediaAsset');
 const { getClientIP } = require('../utils/getClientIP');
@@ -19,6 +19,9 @@ const logView = async (req, res, next) => {
       user_agent: req.get('User-Agent'),
     });
 
+    // Invalidate the cache for this media asset
+    invalidateAnalyticsCache(id);
+
     res.status(201).json({ success: true, message: 'View logged successfully' });
   } catch (error) {
     next(error);
@@ -34,37 +37,8 @@ const getAnalytics = async (req, res, next) => {
       return res.status(404).json({ error: 'MEDIA_NOT_FOUND', message: `Media asset with ID ${id} does not exist` });
     }
 
-    const totalViews = await MediaViewLog.count({ where: { media_id: id } });
-    const uniqueIps = await MediaViewLog.count({
-      where: { media_id: id },
-      distinct: true,
-      col: 'viewed_by_ip',
-    });
-
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-    const last30Days = await MediaViewLog.count({
-      where: {
-        media_id: id,
-        timestamp: {
-          [Op.gte]: thirtyDaysAgo,
-        },
-      },
-    });
-
-    // More complex aggregations like views_per_day and peak_hours would require more advanced queries
-    // or a dedicated analytics service. Returning placeholders for now.
-
-    res.status(200).json({
-      media_id: id,
-      total_views: totalViews,
-      unique_ips: uniqueIps,
-      views_per_day: {}, // Placeholder
-      peak_hours: {}, // Placeholder
-      last_30_days: last30Days,
-      growth_rate: '+0%', // Placeholder
-    });
+    const analytics = await getCachedAnalytics(id);
+    res.status(200).json({ media_id: id, ...analytics });
   } catch (error) {
     next(error);
   }

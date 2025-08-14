@@ -11,9 +11,13 @@ This is the backend for a media streaming and analytics platform. It's built wit
 
 ## How to get it running
 
-First, you need to have Node.js installed on your computer.
+First, you need to have Node.js and Redis installed on your computer.
 
-1.  **Install the stuff it needs:**
+1.  **Install Redis:**
+    If you don't have Redis, you can get it from the official website: [https://redis.io/download](https://redis.io/download)
+    Make sure the Redis server is running before you start the application.
+
+2.  **Install the stuff it needs:**
     Open a terminal in the project folder and run:
     ```
     npm install
